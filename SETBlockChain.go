@@ -3,6 +3,7 @@ package main
 import (
   //"encoding/base64"
   //"encoding/binary"
+  "encoding/json"
   "errors"
   "strconv"
   //"strings"
@@ -87,6 +88,38 @@ func (t *SETBlockChainChaincode) confirmBuy(stub shim.ChaincodeStubInterface, ar
 
   actBalHandler.transferAccountBalance(stub,txMsg.SellerID,txMsg.BuyerID,txMsg.Symbol,txMsg.Volume)
   return nil, txHandler.updateStatus(stub, txID, STATUS_CONFIRMED)
+}
+
+func (t *SETBlockChainChaincode) findUnconfirmedTransaction(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+  myLogger.Debugf("+++++++++++++++++++++++++++++++++++ findUnconfirmedTransaction +++++++++++++++++++++++++++++++++")
+
+  if len(args) != 0 {
+    return nil, errors.New("Incorrect number of arguments. Expecting 0")
+  }
+
+  accountid, err := t.getCertAttribute(stub)
+  if err != nil {
+    return nil, err
+  }
+  myLogger.Debugf("accountid [%v]", accountid)
+
+  txMsgs, err := txHandler.findTransactionByAccountID(stub, accountid)
+  if err != nil {
+    return nil, err
+  }
+
+  var txMsgsUnconfirmed []TransactionMsg
+
+  for _, txMsg := range txMsgs {
+    if txMsg.BuyerID == accountid && txMsg.Status == STATUS_WAITING {
+      txMsgsUnconfirmed = append(txMsgsUnconfirmed, txMsg)
+    }
+  }
+
+  txMsgsJson, err := json.Marshal(txMsgsUnconfirmed)
+  myLogger.Debugf("Response : %s",  txMsgsJson)
+
+  return txMsgsJson, nil
 }
 
 func (t *SETBlockChainChaincode) getTransaction(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
@@ -177,6 +210,8 @@ func (t *SETBlockChainChaincode) Query(stub shim.ChaincodeStubInterface) ([]byte
     return t.getTransaction(stub, args)
   } else if function == "getBalance" {
     return t.getBalance(stub, args)
+  } else if function == "findUnconfirmedTransaction" {
+    return t.findUnconfirmedTransaction(stub, args)
   }
 
   return nil, errors.New("Received unknown function query invocation with function " + function)
