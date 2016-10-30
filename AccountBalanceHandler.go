@@ -26,11 +26,16 @@ func NewAccountBalanceHandler() *accountBalanceHandler {
 
 func (t *accountBalanceHandler) createTable(stub shim.ChaincodeStubInterface) error {
 
-  stub.CreateTable(tableAccountBalance, []*shim.ColumnDefinition{
+  err := stub.CreateTable(tableAccountBalance, []*shim.ColumnDefinition{
     &shim.ColumnDefinition{Name: columnAccountID, Type: shim.ColumnDefinition_STRING, Key: true},
     &shim.ColumnDefinition{Name: columnSymbol, Type: shim.ColumnDefinition_STRING, Key: true},
     &shim.ColumnDefinition{Name: columnBalance, Type: shim.ColumnDefinition_UINT64, Key: false},
   })
+
+  if err != nil {
+    myLogger.Errorf("system error create table account balance %v", err)
+    return errors.New("Cannot create table account balance.")
+  }
 
   return t.InitAccountBalance(stub);
 

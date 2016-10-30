@@ -140,6 +140,7 @@ func (t *SETBlockChainChaincode) Init(stub shim.ChaincodeStubInterface) ([]byte,
     return nil, errors.New("Incorrect number of arguments. Expecting 0")
   }
 /*test*/
+  actBalHandler.createTable(stub)
   return nil, txHandler.createTable(stub)
 }
 
