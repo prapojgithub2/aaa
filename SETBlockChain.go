@@ -14,6 +14,7 @@ import (
 var myLogger = logging.MustGetLogger("setBlockChain")
 
 var txHandler = NewTransactionHandler()
+var actBalHandler = NewAccountBalanceHandler()
 
 type SETBlockChainChaincode struct {
 }
@@ -84,6 +85,7 @@ func (t *SETBlockChainChaincode) confirmBuy(stub shim.ChaincodeStubInterface, ar
     return nil, errors.New("Invalid buyerID")
   }
 
+  actBalHandler.transferAccountBalance(stub,txMsg.SellerID,txMsg.BuyerID,txMsg.Symbol,txMsg.Volume)
   return nil, txHandler.updateStatus(stub, txID, STATUS_CONFIRMED)
 }
 
@@ -110,6 +112,22 @@ func (t *SETBlockChainChaincode) getTransaction(stub shim.ChaincodeStubInterface
   }
 
   return txHandler.query(stub, accountid)
+}
+
+func (t *SETBlockChainChaincode) getBalance(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+  myLogger.Debugf("+++++++++++++++++++++++++++++++++++ getBalance +++++++++++++++++++++++++++++++++")
+
+  if len(args) != 0 {
+    return nil, errors.New("Incorrect number of arguments. Expecting 0")
+  }
+
+  accountid, err := t.getCertAttribute(stub)
+  if err != nil {
+    return nil, err
+  }
+  myLogger.Debugf("accountid [%v]", accountid)
+
+  return actBalHandler.query(stub, accountid)
 }
 
 func (t *SETBlockChainChaincode) Init(stub shim.ChaincodeStubInterface) ([]byte, error) {
@@ -156,9 +174,9 @@ func (t *SETBlockChainChaincode) Query(stub shim.ChaincodeStubInterface) ([]byte
   // Handle different functions
   if function == "getTransaction" {
     return t.getTransaction(stub, args)
-  }/* else if function == "getBalance" {
+  } else if function == "getBalance" {
     return t.getBalance(stub, args)
-  }*/
+  }
 
   return nil, errors.New("Received unknown function query invocation with function " + function)
 }

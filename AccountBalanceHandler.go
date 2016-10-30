@@ -3,15 +3,11 @@ package main
 import (
   "encoding/json"
   "errors"
-  "strconv"
-
   "github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
 const (
   tableAccountBalance = "AccountBalance"
-  columnAccountID     = "AccountID"
-  columnSymbol        = "Symbol"
   columnBalance       = "Balance"
 )
 
@@ -43,33 +39,33 @@ func (t *accountBalanceHandler) createTable(stub shim.ChaincodeStubInterface) er
 
 
 func (t *accountBalanceHandler) InitAccountBalance(stub shim.ChaincodeStubInterface) error {
-	updateAccountBalance(stub,"AA01","AAAA", 1000)
-  	updateAccountBalance(stub,"AA01","BBBB", 1000)
-  	updateAccountBalance(stub,"AA01","CCCC", 1000)
-  	updateAccountBalance(stub,"AA01","DDDD", 1000)
-	updateAccountBalance(stub,"AA02","AAAA", 1000)
-  	updateAccountBalance(stub,"AA02","BBBB", 1000)
-  	updateAccountBalance(stub,"AA02","CCCC", 1000)
-  	updateAccountBalance(stub,"AA02","DDDD", 1000)
-  	updateAccountBalance(stub,"AA03","AAAA", 1000)
-  	updateAccountBalance(stub,"AA03","BBBB", 1000)
-  	updateAccountBalance(stub,"AA03","CCCC", 1000)
-  	updateAccountBalance(stub,"AA03","DDDD", 1000)
-  	updateAccountBalance(stub,"AA04","AAAA", 1000)
-  	updateAccountBalance(stub,"AA04","BBBB", 1000)
-  	updateAccountBalance(stub,"AA04","CCCC", 1000)
-  	updateAccountBalance(stub,"AA04","DDDD", 1000)  	
-   	updateAccountBalance(stub,"AA05","AAAA", 1000)
-  	updateAccountBalance(stub,"AA05","BBBB", 1000)
-  	updateAccountBalance(stub,"AA05","CCCC", 1000)
-  	updateAccountBalance(stub,"AA05","DDDD", 1000)  
+	  t.updateAccountBalance(stub,"AA01","AAAA", 1000)
+  	t.updateAccountBalance(stub,"AA01","BBBB", 1000)
+  	t.updateAccountBalance(stub,"AA01","CCCC", 1000)
+  	t.updateAccountBalance(stub,"AA01","DDDD", 1000)
+	  t.updateAccountBalance(stub,"AA02","AAAA", 1000)
+  	t.updateAccountBalance(stub,"AA02","BBBB", 1000)
+  	t.updateAccountBalance(stub,"AA02","CCCC", 1000)
+  	t.updateAccountBalance(stub,"AA02","DDDD", 1000)
+  	t.updateAccountBalance(stub,"AA03","AAAA", 1000)
+  	t.updateAccountBalance(stub,"AA03","BBBB", 1000)
+  	t.updateAccountBalance(stub,"AA03","CCCC", 1000)
+  	t.updateAccountBalance(stub,"AA03","DDDD", 1000)
+  	t.updateAccountBalance(stub,"AA04","AAAA", 1000)
+  	t.updateAccountBalance(stub,"AA04","BBBB", 1000)
+  	t.updateAccountBalance(stub,"AA04","CCCC", 1000)
+  	t.updateAccountBalance(stub,"AA04","DDDD", 1000)  	
+   	t.updateAccountBalance(stub,"AA05","AAAA", 1000)
+  	t.updateAccountBalance(stub,"AA05","BBBB", 1000)
+  	t.updateAccountBalance(stub,"AA05","CCCC", 1000)
+  	t.updateAccountBalance(stub,"AA05","DDDD", 1000)  
   return nil
 }
 
 
 
-func (t *transactionHandler) updateAccountBalance(stub shim.ChaincodeStubInterface,
-  accountID string,
+func (t *accountBalanceHandler) updateAccountBalance(stub shim.ChaincodeStubInterface,
+  accountID string, 
   symbol string,
   balance uint64) error {
 
@@ -79,6 +75,7 @@ func (t *transactionHandler) updateAccountBalance(stub shim.ChaincodeStubInterfa
   colSymbol := shim.Column{Value: &shim.Column_String_{String_: symbol}}
   columnsTx = append(columnsTx, colSymbol)
   row, err := stub.GetRow(tableAccountBalance, columnsTx)
+  var ok bool
 
   if err != nil {
     myLogger.Errorf("system error %v", err)
@@ -115,7 +112,7 @@ func (t *transactionHandler) updateAccountBalance(stub shim.ChaincodeStubInterfa
   return nil
 }
 
-func (t *transactionHandler) queryAccountBalance(stub shim.ChaincodeStubInterface, accountID string) ([]byte, error) {
+func (t *accountBalanceHandler) query(stub shim.ChaincodeStubInterface, accountID string) ([]byte, error) {
   var columnsTx []shim.Column
   colAccountID := shim.Column{Value: &shim.Column_String_{String_: accountID}}
   columnsTx = append(columnsTx, colAccountID)
@@ -155,7 +152,7 @@ func (t *transactionHandler) queryAccountBalance(stub shim.ChaincodeStubInterfac
   return balMsgsJson, nil
 }
 
-func (t *transactionHandler) transferAccountBalance(stub shim.ChaincodeStubInterface, sellerID string, buyerID string,symbol string, volume uint64) error {
+func (t *accountBalanceHandler) transferAccountBalance(stub shim.ChaincodeStubInterface, sellerID string, buyerID string,symbol string, volume uint64) error {
   myLogger.Debugf("transfer balance %v , %v , %v, %v",sellerID,buyerID,symbol,volume)
   
   // seller
@@ -179,7 +176,7 @@ func (t *transactionHandler) transferAccountBalance(stub shim.ChaincodeStubInter
   var buyerColumnsTx []shim.Column
   colAccountID = shim.Column{Value: &shim.Column_String_{String_: sellerID}}
   buyerColumnsTx = append(buyerColumnsTx, colAccountID)
-  buyer, err = stub.GetRow(tableAccountBalance, buyerColumnsTx)
+  buyer, err := stub.GetRow(tableAccountBalance, buyerColumnsTx)
   if err != nil  {
     myLogger.Errorf("system error %v", err)
     return errors.New("Cannot transfer account balance on buy side.")
