@@ -32,9 +32,8 @@ func (t *accountBalanceHandler) createTable(stub shim.ChaincodeStubInterface) er
     &shim.ColumnDefinition{Name: columnBalance, Type: shim.ColumnDefinition_UINT64, Key: false},
   })
 
-  t.InitAccountBalance(stub);
+  return t.InitAccountBalance(stub);
 
-  return nil
 }
 
 
