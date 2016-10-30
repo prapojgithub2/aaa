@@ -100,7 +100,7 @@ func (t *accountBalanceHandler) updateAccountBalance(stub shim.ChaincodeStubInte
   	return nil
   }
 
-   _, err = stub.ReplaceRow(tableTransaction, shim.Row{
+   _, err = stub.ReplaceRow(tableAccountBalance, shim.Row{
     Columns: []*shim.Column{
       &shim.Column{Value: &shim.Column_String_{String_: row.Columns[0].GetString_()}},//accountID
       &shim.Column{Value: &shim.Column_String_{String_: row.Columns[1].GetString_()}},//symbol
