@@ -162,6 +162,10 @@ func (t *accountBalanceHandler) transferAccountBalance(stub shim.ChaincodeStubIn
   var sellerColumnsTx []shim.Column
   colAccountID := shim.Column{Value: &shim.Column_String_{String_: sellerID}}
   sellerColumnsTx = append(sellerColumnsTx, colAccountID)
+  colSymbol := shim.Column{Value: &shim.Column_String_{String_: symbol}}
+  sellerColumnsTx = append(sellerColumnsTx, colSymbol)
+
+
   seller, err := stub.GetRow(tableAccountBalance, sellerColumnsTx)
   
   if err != nil  || len(seller.Columns) == 0 {
@@ -179,6 +183,9 @@ func (t *accountBalanceHandler) transferAccountBalance(stub shim.ChaincodeStubIn
   var buyerColumnsTx []shim.Column
   colAccountID = shim.Column{Value: &shim.Column_String_{String_: sellerID}}
   buyerColumnsTx = append(buyerColumnsTx, colAccountID)
+  colSymbol = shim.Column{Value: &shim.Column_String_{String_: symbol}}
+  buyerColumnsTx = append(buyerColumnsTx, colSymbol)
+
   buyer, err := stub.GetRow(tableAccountBalance, buyerColumnsTx)
   if err != nil  {
     myLogger.Errorf("system error %v", err)
