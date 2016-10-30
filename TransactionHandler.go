@@ -215,6 +215,59 @@ func (t *transactionHandler) getTransaction(stub shim.ChaincodeStubInterface,
   return &txMsg, nil
 }
 
+func (t *transactionHandler) findTransactionByAccountID(stub shim.ChaincodeStubInterface,
+  accountid string) ([]TransactionMsg, error) {
+
+  var columns []shim.Column
+  colAccountID := shim.Column{Value: &shim.Column_String_{String_: accountid}}
+  columns = append(columns, colAccountID)
+
+  rowChannel, err := stub.GetRows(tableAccountIDTransaction, columns)
+  if err != nil {
+    myLogger.Errorf("system error %v", err)
+    return nil, errors.New("Cannot query transaction.")
+  }
+
+  var txMsgs []TransactionMsg
+
+  for {
+    select {
+    case row, ok := <-rowChannel:
+      if !ok {
+        rowChannel = nil
+      } else {
+        var columnsTx []shim.Column
+        colTxId := shim.Column{Value: &shim.Column_Uint64{Uint64: row.Columns[1].GetUint64()}}
+        columnsTx = append(columnsTx, colTxId)
+        rowTx, err := stub.GetRow(tableTransaction, columnsTx)
+
+        if err != nil {
+          myLogger.Errorf("system error %v", err)
+          return nil, errors.New("Cannot query transaction.")
+        }
+
+        txMsg := TransactionMsg{
+          rowTx.Columns[0].GetUint64(),//txId
+          rowTx.Columns[1].GetString_(),//symbol
+          rowTx.Columns[2].GetString_(),//buyerID
+          rowTx.Columns[3].GetString_(),//sellerID
+          rowTx.Columns[4].GetString_(),//price
+          rowTx.Columns[5].GetUint64(),//volume
+          rowTx.Columns[6].GetString_(),//status
+        }
+        txMsgs = append(txMsgs, txMsg)
+
+        myLogger.Debugf("[%v]", txMsg)
+      }
+    }
+    if rowChannel == nil {
+      break
+    }
+  }
+
+  return txMsgs, nil
+}
+
 func (t *transactionHandler) query(stub shim.ChaincodeStubInterface,
   accountid string) ([]byte, error) {
 
@@ -299,7 +352,7 @@ func (t *transactionHandler) updateAccountBalance(stub shim.ChaincodeStubInterfa
         Columns: []*shim.Column{
           &shim.Column{Value: &shim.Column_String_{String_: accountID}},
           &shim.Column{Value: &shim.Column_String_{String_: symbol}},
-          &shim.Column{Value: &shim.Column_Uint64{Uint64: balance}}},  
+          &shim.Column{Value: &shim.Column_Uint64{Uint64: balance}}},
       })
 
     if !ok && err == nil {
@@ -331,13 +384,13 @@ func (t *transactionHandler) queryAccountBalance(stub shim.ChaincodeStubInterfac
   columnsTx = append(columnsTx, colAccountID)
   rowChannel, err := stub.GetRows(tableAccountBalance, columnsTx)
   var balMsgs []BalanceMsg
-  
+
   if err != nil {
     myLogger.Errorf("system error %v", err)
     return nil, errors.New("Cannot query account balance.")
   }
 
-  
+
   for {
     select {
     case row, ok := <-rowChannel:

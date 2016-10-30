@@ -100,6 +100,15 @@ func (t *SETBlockChainChaincode) getTransaction(stub shim.ChaincodeStubInterface
   }
   myLogger.Debugf("accountid [%v]", accountid)
 
+  txMsgs, err := txHandler.findTransactionByAccountID(stub, accountid)
+  if err != nil {
+    return nil, err
+  }
+
+  for index, txMsg := range txMsgs {
+    myLogger.Debugf("[%v]:[%v]", index, txMsg)
+  }
+
   return txHandler.query(stub, accountid)
 }
 
