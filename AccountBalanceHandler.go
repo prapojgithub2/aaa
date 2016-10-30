@@ -75,7 +75,6 @@ func (t *accountBalanceHandler) updateAccountBalance(stub shim.ChaincodeStubInte
   colSymbol := shim.Column{Value: &shim.Column_String_{String_: symbol}}
   columnsTx = append(columnsTx, colSymbol)
   row, err := stub.GetRow(tableAccountBalance, columnsTx)
-  var ok bool
 
   if err != nil {
     myLogger.Errorf("system error %v", err)
@@ -83,7 +82,7 @@ func (t *accountBalanceHandler) updateAccountBalance(stub shim.ChaincodeStubInte
   }
 
   if len(row.Columns) == 0 {
-  	ok, err := stub.InsertRow(tableAccountBalance, shim.Row{
+  	_, err := stub.InsertRow(tableAccountBalance, shim.Row{
       Columns: []*shim.Column{
         &shim.Column{Value: &shim.Column_String_{String_: accountID}},
         &shim.Column{Value: &shim.Column_String_{String_: symbol}},
@@ -97,7 +96,7 @@ func (t *accountBalanceHandler) updateAccountBalance(stub shim.ChaincodeStubInte
   	return nil
   }
 
-  ok, err = stub.ReplaceRow(tableTransaction, shim.Row{
+   _, err = stub.ReplaceRow(tableTransaction, shim.Row{
     Columns: []*shim.Column{
       &shim.Column{Value: &shim.Column_String_{String_: row.Columns[0].GetString_()}},//accountID
       &shim.Column{Value: &shim.Column_String_{String_: row.Columns[1].GetString_()}},//symbol
