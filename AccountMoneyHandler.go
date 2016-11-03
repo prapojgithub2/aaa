@@ -9,9 +9,8 @@ import (
 )
 
 const (
-	tableColumn     = "AccountMoney"
-	columnAccountID = "AccountID"
-	columnAmount    = "Amount"
+	tableAccountMoney = "AccountMoney"
+	columnAmount      = "Amount"
 )
 
 type accountMoneyHandler struct {
@@ -31,7 +30,7 @@ func NewAccountMoneyHandler() *accountMoneyHandler {
 func (t *accountMoneyHandler) createTable(stub shim.ChaincodeStubInterface) error {
 
 	// Create asset depository table
-	stub.CreateTable(tableColumn, []*shim.ColumnDefinition{
+	stub.CreateTable(tableAccountMoney, []*shim.ColumnDefinition{
 		&shim.ColumnDefinition{Name: columnAccountID, Type: shim.ColumnDefinition_STRING, Key: true},
 		&shim.ColumnDefinition{Name: columnAmount, Type: shim.ColumnDefinition_UINT64, Key: false},
 	})
@@ -39,16 +38,16 @@ func (t *accountMoneyHandler) createTable(stub shim.ChaincodeStubInterface) erro
 }
 
 func (t *accountMoneyHandler) initAccountMoney(stub shim.ChaincodeStubInterface) error {
-	t.assign(stub, "A01", 100000)
-	t.assign(stub, "A02", 100000)
-	t.assign(stub, "A03", 100000)
-	t.assign(stub, "A04", 100000)
-	t.assign(stub, "A05", 100000)
-	t.assign(stub, "A06", 100000)
-	t.assign(stub, "A07", 100000)
-	t.assign(stub, "A08", 100000)
-	t.assign(stub, "A09", 100000)
-	t.assign(stub, "A10", 100000)
+	t.assign(stub, "AA01", 100000)
+	t.assign(stub, "AA02", 100000)
+	t.assign(stub, "AA03", 100000)
+	t.assign(stub, "AA04", 100000)
+	t.assign(stub, "AA05", 100000)
+	t.assign(stub, "AA06", 100000)
+	t.assign(stub, "AA07", 100000)
+	t.assign(stub, "AA08", 100000)
+	t.assign(stub, "AA09", 100000)
+	t.assign(stub, "AA10", 100000)
 	return nil
 }
 
@@ -59,7 +58,7 @@ func (t *accountMoneyHandler) assign(stub shim.ChaincodeStubInterface,
 	myLogger.Debugf("insert accountID= %v", accountID)
 
 	//insert a new row for this account ID that includes contact information and balance
-	ok, err := stub.InsertRow(tableColumn, shim.Row{
+	ok, err := stub.InsertRow(tableAccountMoney, shim.Row{
 		Columns: []*shim.Column{
 			&shim.Column{Value: &shim.Column_String_{String_: accountID}},
 			&shim.Column{Value: &shim.Column_Uint64{Uint64: amount}}},
@@ -80,7 +79,7 @@ func (t *accountMoneyHandler) updateAccountBalance(stub shim.ChaincodeStubInterf
 
 	myLogger.Debugf("update accountID= %v", accountID)
 
-	ok, err := stub.ReplaceRow(tableColumn, shim.Row{
+	ok, err := stub.ReplaceRow(tableAccountMoney, shim.Row{
 		Columns: []*shim.Column{
 			&shim.Column{Value: &shim.Column_String_{String_: accountID}},
 			&shim.Column{Value: &shim.Column_Uint64{Uint64: amount}}},
@@ -99,7 +98,7 @@ func (t *accountMoneyHandler) deleteAccountRecord(stub shim.ChaincodeStubInterfa
 
 	//delete record matching account ID passed in
 	err := stub.DeleteRow(
-		"AssetsOwnership",
+		"tableAccountMoney",
 		[]shim.Column{shim.Column{Value: &shim.Column_String_{String_: accountID}}},
 	)
 
@@ -176,7 +175,7 @@ func (t *accountMoneyHandler) queryTable(stub shim.ChaincodeStubInterface, accou
 	col1 := shim.Column{Value: &shim.Column_String_{String_: accountID}}
 	columns = append(columns, col1)
 
-	return stub.GetRow(tableColumn, columns)
+	return stub.GetRow(tableAccountMoney, columns)
 }
 
 func (t *accountMoneyHandler) getMoney(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
