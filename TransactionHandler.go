@@ -4,6 +4,7 @@ import (
   "encoding/json"
   "errors"
   "strconv"
+  "time"
 
   "github.com/hyperledger/fabric/core/chaincode/shim"
 )
@@ -39,10 +40,15 @@ type TransactionMsg struct {
   Price string
   Volume uint64
   Status string
+  LastUpdated string
 }
 
 func NewTransactionHandler() *transactionHandler {
   return &transactionHandler{}
+}
+
+func (t *transactionHandler) getCurrentTime() string {
+  return time.Now().Format(time.RFC3339Nano)
 }
 
 func (t *transactionHandler) createTable(stub shim.ChaincodeStubInterface) error {
@@ -55,11 +61,12 @@ func (t *transactionHandler) createTable(stub shim.ChaincodeStubInterface) error
     &shim.ColumnDefinition{Name: columnPrice, Type: shim.ColumnDefinition_STRING, Key: false},
     &shim.ColumnDefinition{Name: columnVolume, Type: shim.ColumnDefinition_UINT64, Key: false},
     &shim.ColumnDefinition{Name: columnStatus, Type: shim.ColumnDefinition_STRING, Key: false},
-    //&shim.ColumnDefinition{Name: columnLastUpdated, Type: shim.ColumnDefinition_BYTES, Key: false},
+    &shim.ColumnDefinition{Name: columnLastUpdated, Type: shim.ColumnDefinition_STRING, Key: false},
   })
 
   stub.CreateTable(tableAccountIDTransaction, []*shim.ColumnDefinition{
     &shim.ColumnDefinition{Name: columnAccountID, Type: shim.ColumnDefinition_STRING, Key: true},
+    &shim.ColumnDefinition{Name: columnSymbol, Type: shim.ColumnDefinition_STRING, Key: true},
     &shim.ColumnDefinition{Name: columnTransactionID, Type: shim.ColumnDefinition_UINT64, Key: true},
   })
 
@@ -99,7 +106,8 @@ func (t *transactionHandler) insert(stub shim.ChaincodeStubInterface,
       // &shim.Column{Value: &shim.Column_Bytes{Bytes: price}},
       &shim.Column{Value: &shim.Column_String_{String_: price}},
       &shim.Column{Value: &shim.Column_Uint64{Uint64: volume}},
-      &shim.Column{Value: &shim.Column_String_{String_: status}}},
+      &shim.Column{Value: &shim.Column_String_{String_: status}},
+      &shim.Column{Value: &shim.Column_String_{String_: t.getCurrentTime()}}},
   })
 
   if !ok && err == nil {
@@ -110,6 +118,7 @@ func (t *transactionHandler) insert(stub shim.ChaincodeStubInterface,
   ok, err = stub.InsertRow(tableAccountIDTransaction, shim.Row{
     Columns: []*shim.Column{
       &shim.Column{Value: &shim.Column_String_{String_: buyerID}},
+      &shim.Column{Value: &shim.Column_String_{String_: symbol}},
       &shim.Column{Value: &shim.Column_Uint64{Uint64: txID}}},
   })
 
@@ -121,6 +130,7 @@ func (t *transactionHandler) insert(stub shim.ChaincodeStubInterface,
   ok, err = stub.InsertRow(tableAccountIDTransaction, shim.Row{
     Columns: []*shim.Column{
       &shim.Column{Value: &shim.Column_String_{String_: sellerID}},
+      &shim.Column{Value: &shim.Column_String_{String_: symbol}},
       &shim.Column{Value: &shim.Column_Uint64{Uint64: txID}}},
   })
 
@@ -159,7 +169,8 @@ func (t *transactionHandler) updateStatus(stub shim.ChaincodeStubInterface,
       // &shim.Column{Value: &shim.Column_Bytes{Bytes: price}},
       &shim.Column{Value: &shim.Column_String_{String_: row.Columns[4].GetString_()}},//price
       &shim.Column{Value: &shim.Column_Uint64{Uint64: row.Columns[5].GetUint64()}},//volume
-      &shim.Column{Value: &shim.Column_String_{String_: status}}},
+      &shim.Column{Value: &shim.Column_String_{String_: status}},//status
+      &shim.Column{Value: &shim.Column_String_{String_: t.getCurrentTime()}}},
 	})
 
 	if !ok && err == nil {
@@ -195,6 +206,7 @@ func (t *transactionHandler) getTransaction(stub shim.ChaincodeStubInterface,
     row.Columns[4].GetString_(),//price
     row.Columns[5].GetUint64(),//volume
     row.Columns[6].GetString_(),//status
+    row.Columns[7].GetString_(),//lastUpdated
   }
 
   return &txMsg, nil
@@ -222,7 +234,7 @@ func (t *transactionHandler) findTransactionByAccountID(stub shim.ChaincodeStubI
         rowChannel = nil
       } else {
         var columnsTx []shim.Column
-        colTxId := shim.Column{Value: &shim.Column_Uint64{Uint64: row.Columns[1].GetUint64()}}
+        colTxId := shim.Column{Value: &shim.Column_Uint64{Uint64: row.Columns[2].GetUint64()}}
         columnsTx = append(columnsTx, colTxId)
         rowTx, err := stub.GetRow(tableTransaction, columnsTx)
 
@@ -239,6 +251,64 @@ func (t *transactionHandler) findTransactionByAccountID(stub shim.ChaincodeStubI
           rowTx.Columns[4].GetString_(),//price
           rowTx.Columns[5].GetUint64(),//volume
           rowTx.Columns[6].GetString_(),//status
+          rowTx.Columns[7].GetString_(),//lastUpdated
+        }
+        txMsgs = append(txMsgs, txMsg)
+
+        myLogger.Debugf("[%v]", txMsg)
+      }
+    }
+    if rowChannel == nil {
+      break
+    }
+  }
+
+  return txMsgs, nil
+}
+
+func (t *transactionHandler) findTransactionByAccountIDSymbol(stub shim.ChaincodeStubInterface,
+  accountid string,
+  symbol string) ([]TransactionMsg, error) {
+
+  var columns []shim.Column
+  colAccountID := shim.Column{Value: &shim.Column_String_{String_: accountid}}
+  colSymbol := shim.Column{Value: &shim.Column_String_{String_: symbol}}
+  columns = append(columns, colAccountID)
+  columns = append(columns, colSymbol)
+
+  rowChannel, err := stub.GetRows(tableAccountIDTransaction, columns)
+  if err != nil {
+    myLogger.Errorf("system error %v", err)
+    return nil, errors.New("Cannot query transaction.")
+  }
+
+  var txMsgs []TransactionMsg
+
+  for {
+    select {
+    case row, ok := <-rowChannel:
+      if !ok {
+        rowChannel = nil
+      } else {
+        var columnsTx []shim.Column
+        colTxId := shim.Column{Value: &shim.Column_Uint64{Uint64: row.Columns[2].GetUint64()}}
+        columnsTx = append(columnsTx, colTxId)
+        rowTx, err := stub.GetRow(tableTransaction, columnsTx)
+
+        if err != nil {
+          myLogger.Errorf("system error %v", err)
+          return nil, errors.New("Cannot query transaction.")
+        }
+
+        txMsg := TransactionMsg{
+          rowTx.Columns[0].GetUint64(),//txId
+          rowTx.Columns[1].GetString_(),//symbol
+          rowTx.Columns[2].GetString_(),//buyerID
+          rowTx.Columns[3].GetString_(),//sellerID
+          rowTx.Columns[4].GetString_(),//price
+          rowTx.Columns[5].GetUint64(),//volume
+          rowTx.Columns[6].GetString_(),//status
+          rowTx.Columns[7].GetString_(),//lastUpdated
         }
         txMsgs = append(txMsgs, txMsg)
 
@@ -275,7 +345,7 @@ func (t *transactionHandler) query(stub shim.ChaincodeStubInterface,
         rowChannel = nil
       } else {
         var columnsTx []shim.Column
-        colTxId := shim.Column{Value: &shim.Column_Uint64{Uint64: row.Columns[1].GetUint64()}}
+        colTxId := shim.Column{Value: &shim.Column_Uint64{Uint64: row.Columns[2].GetUint64()}}
         columnsTx = append(columnsTx, colTxId)
         rowTx, err := stub.GetRow(tableTransaction, columnsTx)
 
@@ -292,6 +362,7 @@ func (t *transactionHandler) query(stub shim.ChaincodeStubInterface,
           rowTx.Columns[4].GetString_(),//price
           rowTx.Columns[5].GetUint64(),//volume
           rowTx.Columns[6].GetString_(),//status
+          rowTx.Columns[7].GetString_(),//lastUpdated
         }
         txMsgs = append(txMsgs, txMsg)
 
@@ -308,4 +379,3 @@ func (t *transactionHandler) query(stub shim.ChaincodeStubInterface,
 
   return txMsgsJson, nil
 }
-
