@@ -94,6 +94,7 @@ func (t *SETBlockChainChaincode) confirmBuy(stub shim.ChaincodeStubInterface, ar
 		return nil, errors.New("Unable to parse Price" + txMsg.Price)
 	}
 	var noOfHolderAllowed uint64 = 5;
+	myLogger.Debugf("+++++++++++++++++++++++++++++++++++ termshee validation +++++++++++++++++++++++++++++++++")	
 	if ( actBalHandler.validateOverTermSheetRules(stub,txMsg.SellerID,txMsg.BuyerID,txMsg.Symbol,txMsg.Volume,noOfHolderAllowed)){
 		actMonHandler.transfer(stub, txMsg.BuyerID, txMsg.SellerID, price*txMsg.Volume)
 		actBalHandler.transferAccountBalance(stub, txMsg.SellerID, txMsg.BuyerID, txMsg.Symbol, txMsg.Volume)

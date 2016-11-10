@@ -1,0 +1,120 @@
+<script src="https://code.jquery.com/jquery-2.2.4.js"></script>
+
+<script>
+var data;
+
+$(document).ready(function() {
+	$( "#frm1" ).submit(function( event ) {
+	  
+	  event.preventDefault();
+	  
+	  data = document.forms["frm1"]["data"].value;
+	  url = $("#url").val();
+	  
+	  var posting = $.post( url, data );
+	 
+	  posting.done(function( data ) {
+		$( "#result" ).empty().text( JSON.stringify(data) );
+	  });
+	});
+});
+</script>
+
+<form id="frm1" action="/">
+URL:
+<select id="url">
+  <option value="http://52.40.0.144:7050/chaincode">http://52.40.0.144:7050/chaincode(32)</option>
+  <option value="http://52.40.0.144:7050/registrar">http://52.40.0.144:7050/registrar(32)</option>
+  </select>
+<br/>
+Data:
+<br/>
+<textarea id="data" name="data" rows="20" cols="150">
+{
+  "jsonrpc": "2.0",
+  "method": "invoke",
+  "params": {
+    "type": 1,
+    "chaincodeID":{
+        "name": "mycc"
+    },
+    "ctorMsg": {
+        "args":["sell", "BBL", "AA02", "12300", "2000"]
+    },
+    "secureContext": "user01",
+    "attributes" : ["accountid"]
+  },
+  "id": 1
+}
+</textarea>
+<input type="submit" value="Submit"/>
+</form>
+<b>result:</b>
+<div id="result">................................</div>
+
+<br>
+<b>registrar</b><br>
+{
+  "enrollId": "user01",
+  "enrollSecret": "user01"
+}
+<br>
+<b>deploy</b><br>
+{
+  "jsonrpc": "2.0",
+  "method": "deploy",
+  "params": {
+    "type": 1,
+    "chaincodeID":{
+        "name": "mycc"
+    },
+    "ctorMsg": {
+        "args":["init"]
+    },
+    "secureContext": "user01",
+    "attributes" : ["accountid"]
+  },
+  "id": 1
+}
+
+<br>
+<b>revoke</b><br>
+{
+  "jsonrpc": "2.0",
+  "method": "invoke",
+  "params": {
+    "type": 1,
+    "chaincodeID":{
+        "name": "mycc"
+    },<br>
+    "ctorMsg": {
+        "args":["sell", "AAAA", "AA02", "10", "10"]
+    },<br>
+    "secureContext": "user01",
+    "attributes" : ["accountid"]
+  },
+  "id": 1
+}
+<br>
+<b>revoke-others</b><br>
+confirmBuy-> "args":["confirmBuy", "1"]<br>
+<b>query</b><br>
+{
+  "jsonrpc": "2.0",
+  "method": "query",
+  "params": {
+      "type": 1,
+      "chaincodeID":{
+          "name":"mycc"
+      },
+      "ctorMsg": {
+         "args":["getTransaction"]
+      },<br>
+	"secureContext": "user01",
+    "attributes" : ["accountid"]
+  },
+  "id": 5
+}
+<br>
+<b>query-others</b><br>
+ "args":["getBalance"]
