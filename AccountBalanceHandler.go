@@ -118,7 +118,7 @@ func (t *accountBalanceHandler) validateOverTermSheetRules(stub shim.ChaincodeSt
     }
   }
   myLogger.Debugf("++++++++++++++ validateOverTermSheetRules overRide=%v,NoOfHolders=%v,ValidSeller=%v",overRide,finalNoOfHolders,validSeller);
-  if ( overRide || (finalNoOfHolders <= noOfHolderAllowed && validSeller)){
+  if ( (overRide || finalNoOfHolders <= noOfHolderAllowed) && validSeller){
       return true , nil
   } 
   return false , nil;

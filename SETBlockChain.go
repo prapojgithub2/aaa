@@ -94,13 +94,15 @@ func (t *SETBlockChainChaincode) confirmBuy(stub shim.ChaincodeStubInterface, ar
 		return nil, errors.New("Unable to parse Price" + txMsg.Price)
 	}
 	var noOfHolderAllowed uint64 = 5;
-	myLogger.Debugf("+++++++++++++++++++++++++++++++++++ termshee validation +++++++++++++++++++++++++++++++++")	
+	myLogger.Debugf("+++++++++++++++++++++++++++++++++++ termsheet validation +++++++++++++++++++++++++++++++++")	
 	ok , err := actBalHandler.validateOverTermSheetRules(stub,txMsg.SellerID,txMsg.BuyerID,txMsg.Symbol,txMsg.Volume,noOfHolderAllowed);	
 	if ( ok ){
+		myLogger.Debugf("+++++++++++++++++++++++++++++++++++ validate OK +++++++++++++++++++++++++++++++++")
 		actMonHandler.transfer(stub, txMsg.BuyerID, txMsg.SellerID, price*txMsg.Volume)
 		actBalHandler.transferAccountBalance(stub, txMsg.SellerID, txMsg.BuyerID, txMsg.Symbol, txMsg.Volume)
 		return nil, txHandler.updateStatus(stub, txID, STATUS_CONFIRMED)
 	} else {
+		myLogger.Debugf("+++++++++++++++++++++++++++++++++++ validate FAILS +++++++++++++++++++++++++++++++++")
 		return nil, errors.New("Not pass termsheet validation");
 	}
 
