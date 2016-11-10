@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
-	"strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
@@ -176,48 +174,4 @@ func (t *accountMoneyHandler) queryTable(stub shim.ChaincodeStubInterface, accou
 	columns = append(columns, col1)
 
 	return stub.GetRow(tableAccountMoney, columns)
-}
-
-func (t *accountMoneyHandler) getMoney(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	myLogger.Debugf("+++++++++++++++++++++++++++++++++++getMoney+++++++++++++++++++++++++++++++++")
-	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 0")
-	}
-
-	accountID := args[0]
-
-	balance, err := t.queryBalance(stub, accountID)
-	if err != nil {
-		return nil, err
-	}
-
-	var txMsgs []AccountMoneyMsg
-	txMsg := AccountMoneyMsg{
-		accountID, //AccountID
-		balance,   //Amount
-	}
-	txMsgs = append(txMsgs, txMsg)
-
-	txMsgsJSON, err := json.Marshal(txMsgs)
-	myLogger.Debugf("Response : %s", txMsgsJSON)
-
-	//return []byte(balanceStr), nil
-	return txMsgsJSON, nil
-}
-
-func (t *accountMoneyHandler) transferMoney(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	myLogger.Debugf("+++++++++++++++++++++++++++++++++++transferMoney+++++++++++++++++++++++++++++++++")
-
-	if len(args) != 3 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 3")
-	}
-
-	amount, err := strconv.ParseUint(args[2], 10, 64)
-	if err != nil {
-		myLogger.Errorf("system error %v", err)
-		return nil, errors.New("Unable to parse amount" + args[2])
-	}
-
-	// call dHandler.transfer to transfer to transfer "amount" from "from account" IDs to "to account" IDs
-	return nil, t.transfer(stub, args[0], args[1], amount)
 }

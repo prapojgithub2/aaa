@@ -17,6 +17,7 @@ var myLogger = logging.MustGetLogger("setBlockChain")
 var txHandler = NewTransactionHandler()
 var actBalHandler = NewAccountBalanceHandler()
 var actMonHandler = NewAccountMoneyHandler()
+var secProHandler = NewSecurityProfileHandler()
 
 type SETBlockChainChaincode struct {
 }
@@ -206,6 +207,59 @@ func (t *SETBlockChainChaincode) getBalance(stub shim.ChaincodeStubInterface, ar
 	return actBalHandler.query(stub, accountid)
 }
 
+func (t *SETBlockChainChaincode) getMoney(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	myLogger.Debugf("+++++++++++++++++++++++++++++++++++getMoney+++++++++++++++++++++++++++++++++")
+
+	accountid, err := t.getCertAttribute(stub)
+	if err != nil {
+		return nil, err
+	}
+
+	balance, err := actMonHandler.queryBalance(stub, accountid)
+	if err != nil {
+		return nil, err
+	}
+
+	var txMsgs []AccountMoneyMsg
+	txMsg := AccountMoneyMsg{
+		accountid, //AccountID
+		balance,   //Amount
+	}
+	txMsgs = append(txMsgs, txMsg)
+
+	txMsgsJSON, err := json.Marshal(txMsgs)
+	myLogger.Debugf("Response : %s", txMsgsJSON)
+
+	//return []byte(balanceStr), nil
+	return txMsgsJSON, nil
+}
+
+func (t *SETBlockChainChaincode) getMaxNumberHolder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	myLogger.Debugf("+++++++++++++++++++++++++++++++++++getMaxNumberHolder+++++++++++++++++++++++++++++++++")
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 0")
+	}
+
+	sysmbol := args[0]
+
+	maxNumberHolder, err := secProHandler.getMaxNumberHolder(stub, sysmbol)
+	if err != nil {
+		return nil, err
+	}
+
+	var txMsgs []SecurityProfileMsg
+	txMsg := SecurityProfileMsg{
+		sysmbol,         //Symbol
+		maxNumberHolder, //MaxNumberHolder
+	}
+	txMsgs = append(txMsgs, txMsg)
+
+	txMsgsJSON, err := json.Marshal(txMsgs)
+	myLogger.Debugf("Response : %s", txMsgsJSON)
+
+	return txMsgsJSON, nil
+}
+
 func (t *SETBlockChainChaincode) Init(stub shim.ChaincodeStubInterface) ([]byte, error) {
 	myLogger.Debugf("******************************** Init ****************************************")
 
@@ -218,6 +272,7 @@ func (t *SETBlockChainChaincode) Init(stub shim.ChaincodeStubInterface) ([]byte,
 	/*test*/
 	actBalHandler.createTable(stub)
 	actMonHandler.createTable(stub)
+	secProHandler.createTable(stub)
 	return nil, txHandler.createTable(stub)
 }
 
@@ -257,10 +312,12 @@ func (t *SETBlockChainChaincode) Query(stub shim.ChaincodeStubInterface) ([]byte
 		return t.getBalance(stub, args)
 	} else if function == "findUnconfirmedTransaction" {
 		return t.findUnconfirmedTransaction(stub, args)
-		} else if function == "findConfirmedTransactionBySymbol" {
-			return t.findConfirmedTransactionBySymbol(stub, args)
-		} else if function == "getMoney" {
-		return actMonHandler.getMoney(stub, args)
+	} else if function == "findConfirmedTransactionBySymbol" {
+		return t.findConfirmedTransactionBySymbol(stub, args)
+	} else if function == "getMoney" {
+		return t.getMoney(stub, args)
+	} else if function == "getMaxNumberHolder" {
+		return t.getMaxNumberHolder(stub, args)
 	}
 
 	return nil, errors.New("Received unknown function query invocation with function " + function)
