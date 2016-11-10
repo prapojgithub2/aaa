@@ -251,7 +251,7 @@ func (t *accountBalanceHandler) transferAccountBalance(stub shim.ChaincodeStubIn
     return errors.New("Cannot transfer account balance on buy side.")
   }
   var buyerBal uint64 = 0;
-  if len(buyer.Columns) == 0 {
+  if len(buyer.Columns) > 0 {
     buyerBal = buyer.Columns[2].GetUint64()
   }
   myLogger.Infof("+++++++++++++++++++   BuyerBal %v" , buyerBal)
