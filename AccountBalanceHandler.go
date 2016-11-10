@@ -98,7 +98,7 @@ func (t *accountBalanceHandler) validateOverTermSheetRules(stub shim.ChaincodeSt
               /*account check for seller*/ 
               if (tAccount == sellerID && tBalance >= volume){
                 validSeller = true;
-                myLogger.Debugf("++++++++++++++++++++++++ Can sell [%v,%v]",sellerID,tBalance);
+                myLogger.Infof("++++++++++++++++++++++++ Can sell [%v,%v]",sellerID,tBalance);
                 if (tBalance == volume) {                
                   finalNoOfHolders = finalNoOfHolders - 1;                
                 }
@@ -106,7 +106,7 @@ func (t *accountBalanceHandler) validateOverTermSheetRules(stub shim.ChaincodeSt
 
               /*account check for buyer*/ 
               if (tAccount == buyerID && tBalance > 0){
-                myLogger.Debugf("++++++++++++++++++++++++ Sell to existing holders [%v,%v]",buyerID,tBalance);
+                myLogger.Infof("++++++++++++++++++++++++ Sell to existing holders [%v,%v]",buyerID,tBalance);
                 overRide = true;
                 finalNoOfHolders = finalNoOfHolders - 1;                
               }
@@ -117,7 +117,7 @@ func (t *accountBalanceHandler) validateOverTermSheetRules(stub shim.ChaincodeSt
       break
     }
   }
-  myLogger.Debugf("++++++++++++++ validateOverTermSheetRules overRide=%v,NoOfHolders=%v,ValidSeller=%v",overRide,finalNoOfHolders,validSeller);
+  myLogger.Infof("++++++++++++++ validateOverTermSheetRules overRide=%v,NoOfHolders=%v,ValidSeller=%v",overRide,finalNoOfHolders,validSeller);
   if ( (overRide || finalNoOfHolders <= noOfHolderAllowed) && validSeller){
       return true , nil
   } 
