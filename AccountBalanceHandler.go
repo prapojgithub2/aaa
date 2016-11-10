@@ -75,14 +75,11 @@ func (t *accountBalanceHandler) validateOverTermSheetRules(stub shim.ChaincodeSt
 
   var columnsTx []shim.Column
   rowChannel, err := stub.GetRows(tableAccountBalance, columnsTx)
-  var balMsgs []BalanceMsg
-  
   if err != nil {
     myLogger.Errorf("system error %v", err)
     return false, errors.New("Cannot query account balance.")
   }
   var finalNoOfHolders uint64 = 0;
-  newBuyer := false;
   validSeller := false;
   overRide := false;
   
@@ -114,7 +111,7 @@ func (t *accountBalanceHandler) validateOverTermSheetRules(stub shim.ChaincodeSt
               overRide = true;
               finalNoOfHolders = finalNoOfHolders - 1;                
             }
-      }
+      }  
     }
     if rowChannel == nil {
       break
