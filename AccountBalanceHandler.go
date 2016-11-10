@@ -89,27 +89,27 @@ func (t *accountBalanceHandler) validateOverTermSheetRules(stub shim.ChaincodeSt
       if !ok {
         rowChannel = nil
       } else {
-            tSymbol := row.Columns[1].GetString_();
             tAccount := row.Columns[0].GetString_();
+            tSymbol := row.Columns[1].GetString_();
             tBalance := row.Columns[2].GetUint64();
             /*symbol*/ 
             if (tSymbol == symbol ){ 
               finalNoOfHolders = finalNoOfHolders + 1;
-            }
-            /*account check for seller*/ 
-            if (tAccount == sellerID && tBalance >= volume){
-              validSeller = true;
-              myLogger.Debugf("++++++++++++++++++++++++ Can sell [%v,%v]",sellerID,tBalance);
-              if (tBalance == volume) {                
+              /*account check for seller*/ 
+              if (tAccount == sellerID && tBalance >= volume){
+                validSeller = true;
+                myLogger.Debugf("++++++++++++++++++++++++ Can sell [%v,%v]",sellerID,tBalance);
+                if (tBalance == volume) {                
+                  finalNoOfHolders = finalNoOfHolders - 1;                
+                }
+              }
+
+              /*account check for buyer*/ 
+              if (tAccount == buyerID && tBalance > 0){
+                myLogger.Debugf("++++++++++++++++++++++++ Sell to existing holders [%v,%v]",buyerID,tBalance);
+                overRide = true;
                 finalNoOfHolders = finalNoOfHolders - 1;                
               }
-            }
-
-            /*account check for buyer*/ 
-            if (tAccount == buyerID && tBalance > 0){
-              myLogger.Debugf("++++++++++++++++++++++++ Sell to existing holders [%v,%v]",buyerID,tBalance);
-              overRide = true;
-              finalNoOfHolders = finalNoOfHolders - 1;                
             }
       }  
     }
