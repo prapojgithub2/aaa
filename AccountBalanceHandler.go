@@ -66,6 +66,67 @@ func (t *accountBalanceHandler) InitAccountBalance(stub shim.ChaincodeStubInterf
   return nil
 }
 
+func (t *accountBalanceHandler) validateOverTermSheetRules(stub shim.ChaincodeStubInterface,
+  sellerID string, 
+  buyerID string,
+  symbol string, 
+  volume uint64,
+  noOfHolderAllowed uint64) (bool,error){
+
+  var columnsTx []shim.Column
+  rowChannel, err := stub.GetRows(tableAccountBalance, columnsTx)
+  var balMsgs []BalanceMsg
+  
+  if err != nil {
+    myLogger.Errorf("system error %v", err)
+    return false, errors.New("Cannot query account balance.")
+  }
+  var finalNoOfHolders uint64 = 0;
+  newBuyer := false;
+  validSeller := false;
+  overRide := false;
+  
+  for {
+    select {
+    case row, ok := <-rowChannel:
+      if !ok {
+        rowChannel = nil
+      } else {
+            tSymbol := row.Columns[1].GetString_();
+            tAccount := row.Columns[0].GetString_();
+            tBalance := row.Columns[2].GetUint64();
+            /*symbol*/ 
+            if (tSymbol == symbol ){ 
+              finalNoOfHolders = finalNoOfHolders + 1;
+            }
+            /*account check for seller*/ 
+            if (tAccount == sellerID && tBalance >= volume){
+              validSeller = true;
+              myLogger.Debugf("Can sell [%v,%v]",sellerID,tBalance);
+              if (tBalance == volume) {                
+                finalNoOfHolders = finalNoOfHolders - 1;                
+              }
+            }
+
+            /*account check for buyer*/ 
+            if (tAccount == buyerID && tBalance > 0){
+              myLogger.Debugf("Sell to existing holders [%v,%v]",buyerID,tBalance);
+              overRide = true;
+              finalNoOfHolders = finalNoOfHolders - 1;                
+            }
+      }
+    }
+    if rowChannel == nil {
+      break
+    }
+  }
+  myLogger.Debugf("validateOverTermSheetRules overRide=%v,finalNoOfHolders= ",overRide,finalNoOfHolders);
+  if ( overRide || finalNoOfHolders <= noOfHolderAllowed){
+      return true , nil
+  } 
+  return false , nil;
+}
+
 
 
 func (t *accountBalanceHandler) updateAccountBalance(stub shim.ChaincodeStubInterface,
@@ -114,6 +175,7 @@ func (t *accountBalanceHandler) updateAccountBalance(stub shim.ChaincodeStubInte
 
   return nil
 }
+
 
 func (t *accountBalanceHandler) query(stub shim.ChaincodeStubInterface, accountID string) ([]byte, error) {
   var columnsTx []shim.Column
