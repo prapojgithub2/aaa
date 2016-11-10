@@ -94,7 +94,7 @@ func (t *accountBalanceHandler) validateOverTermSheetRules(stub shim.ChaincodeSt
             tBalance := row.Columns[2].GetUint64();
             /*symbol*/ 
             if (tSymbol == symbol ){ 
-              finalNoOfHolders = finalNoOfHolders + 1;
+              if ( tBalance > 0 ) { finalNoOfHolders = finalNoOfHolders + 1 }
               /*account check for seller*/ 
               if (tAccount == sellerID && tBalance >= volume){
                 validSeller = true;
