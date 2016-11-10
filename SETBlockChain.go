@@ -95,7 +95,8 @@ func (t *SETBlockChainChaincode) confirmBuy(stub shim.ChaincodeStubInterface, ar
 	}
 	var noOfHolderAllowed uint64 = 5;
 	myLogger.Debugf("+++++++++++++++++++++++++++++++++++ termshee validation +++++++++++++++++++++++++++++++++")	
-	if ( actBalHandler.validateOverTermSheetRules(stub,txMsg.SellerID,txMsg.BuyerID,txMsg.Symbol,txMsg.Volume,noOfHolderAllowed)){
+	ok , err := actBalHandler.validateOverTermSheetRules(stub,txMsg.SellerID,txMsg.BuyerID,txMsg.Symbol,txMsg.Volume,noOfHolderAllowed);	
+	if ( ok ){
 		actMonHandler.transfer(stub, txMsg.BuyerID, txMsg.SellerID, price*txMsg.Volume)
 		actBalHandler.transferAccountBalance(stub, txMsg.SellerID, txMsg.BuyerID, txMsg.Symbol, txMsg.Volume)
 		return nil, txHandler.updateStatus(stub, txID, STATUS_CONFIRMED)
