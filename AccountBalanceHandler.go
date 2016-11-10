@@ -79,7 +79,7 @@ func (t *accountBalanceHandler) validateOverTermSheetRules(stub shim.ChaincodeSt
     myLogger.Errorf("system error %v", err)
     return false, errors.New("Cannot query account balance.")
   }
-  var finalNoOfHolders uint64 = 0;
+  var finalNoOfHolders uint64 = 1; // for buyers
   validSeller := false;
   overRide := false;
   
@@ -240,7 +240,7 @@ func (t *accountBalanceHandler) transferAccountBalance(stub shim.ChaincodeStubIn
 
   // buyer
   var buyerColumnsTx []shim.Column
-  colAccountID = shim.Column{Value: &shim.Column_String_{String_: sellerID}}
+  colAccountID = shim.Column{Value: &shim.Column_String_{String_: buyerID}}
   buyerColumnsTx = append(buyerColumnsTx, colAccountID)
   colSymbol = shim.Column{Value: &shim.Column_String_{String_: symbol}}
   buyerColumnsTx = append(buyerColumnsTx, colSymbol)
@@ -250,8 +250,12 @@ func (t *accountBalanceHandler) transferAccountBalance(stub shim.ChaincodeStubIn
     myLogger.Errorf("system error %v", err)
     return errors.New("Cannot transfer account balance on buy side.")
   }
-
-  buyerBal := volume + buyer.Columns[2].GetUint64()
+  var buyerBal uint64 = 0;
+  if len(buyer.Columns) == 0 {
+    buyerBal = buyer.Columns[2].GetUint64()
+  }
+  myLogger.Infof("+++++++++++++++++++   BuyerBal %v" , buyerBal)
+  buyerBal = volume + buyerBal;
   t.updateAccountBalance(stub,sellerID,symbol,seller.Columns[2].GetUint64() - volume)
   t.updateAccountBalance(stub,buyerID,symbol,buyerBal)
   return nil
