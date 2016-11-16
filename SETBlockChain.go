@@ -93,17 +93,22 @@ func (t *SETBlockChainChaincode) confirmBuy(stub shim.ChaincodeStubInterface, ar
 		myLogger.Errorf("system error %v", err)
 		return nil, errors.New("Unable to parse Price" + txMsg.Price)
 	}
-	var noOfHolderAllowed uint64 = 5;
-	myLogger.Infof("+++++++++++++++++++++++++++++++++++ termsheet validation +++++++++++++++++++++++++++++++++")	
-	ok , err := actBalHandler.validateOverTermSheetRules(stub,txMsg.SellerID,txMsg.BuyerID,txMsg.Symbol,txMsg.Volume,noOfHolderAllowed);	
-	if ( ok ){
+	//var noOfHolderAllowed uint64 = 5;
+	noOfHolderAllowed, err := secProHandler.getMaxNumberHolder(stub, txMsg.Symbol)
+	if err != nil {
+		return nil, err
+	}
+	myLogger.Infof("+++++++++++++++++++++++++++++++++++ termsheet validation +++++++++++++++++++++++++++++++++")
+	myLogger.Debugf("noOfHolderAllowed [%v]", noOfHolderAllowed)
+	ok, err := actBalHandler.validateOverTermSheetRules(stub, txMsg.SellerID, txMsg.BuyerID, txMsg.Symbol, txMsg.Volume, noOfHolderAllowed)
+	if ok {
 		myLogger.Infof("+++++++++++++++++++++++++++++++++++ validate OK +++++++++++++++++++++++++++++++++")
 		actMonHandler.transfer(stub, txMsg.BuyerID, txMsg.SellerID, price*txMsg.Volume)
 		actBalHandler.transferAccountBalance(stub, txMsg.SellerID, txMsg.BuyerID, txMsg.Symbol, txMsg.Volume)
 		return nil, txHandler.updateStatus(stub, txID, STATUS_CONFIRMED)
 	} else {
 		myLogger.Infof("+++++++++++++++++++++++++++++++++++ validate FAILS +++++++++++++++++++++++++++++++++")
-		return nil, errors.New("Not pass termsheet validation");
+		return nil, errors.New("Not pass termsheet validation")
 	}
 
 }
