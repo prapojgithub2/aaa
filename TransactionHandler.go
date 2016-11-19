@@ -27,6 +27,8 @@ const (
 
   STATUS_WAITING   = "Waiting"
   STATUS_CONFIRMED = "Confirmed"
+  STATUS_CANCEL_BUYER = "CancelByBuyer"
+  STATUS_CANCEL_SELLER = "CancelBySeller"
 )
 
 type transactionHandler struct {

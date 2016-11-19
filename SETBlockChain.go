@@ -113,6 +113,49 @@ func (t *SETBlockChainChaincode) confirmBuy(stub shim.ChaincodeStubInterface, ar
 
 }
 
+func (t *SETBlockChainChaincode) cancel(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	myLogger.Debugf("+++++++++++++++++++++++++++++++++++ cancel +++++++++++++++++++++++++++++++++")
+
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 1")
+	}
+
+	accountid, err := t.getCertAttribute(stub)
+	if err != nil {
+		return nil, err
+	}
+	myLogger.Debugf("accountid [%v]", accountid)
+
+	txID, err := strconv.ParseUint(args[0], 10, 64)
+	if err != nil {
+		return nil, errors.New("Cannot parse txID")
+	}
+
+	txMsg, err := txHandler.getTransaction(stub, txID)
+	if txMsg == nil || err != nil {
+		return nil, errors.New("Cannot find transaction")
+	}
+
+	myLogger.Debugf("Status[%v]", txMsg.Status)
+
+	if STATUS_WAITING != txMsg.Status {
+		return nil, errors.New("Invalid Status")
+	}
+
+	myLogger.Debugf("BuyerID[%v]", txMsg.BuyerID)
+	myLogger.Debugf("SellerID[%v]", txMsg.SellerID)
+
+	if accountid == txMsg.BuyerID {
+		return nil, txHandler.updateStatus(stub, txID, STATUS_CANCEL_BUYER)
+	}
+
+	if accountid == txMsg.SellerID {
+		return nil, txHandler.updateStatus(stub, txID, STATUS_CANCEL_SELLER)
+	}
+
+	return nil, errors.New("Invalid buyerID or SellerID")
+}
+
 func (t *SETBlockChainChaincode) findUnconfirmedTransaction(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	myLogger.Debugf("+++++++++++++++++++++++++++++++++++ findUnconfirmedTransaction +++++++++++++++++++++++++++++++++")
 
@@ -134,12 +177,44 @@ func (t *SETBlockChainChaincode) findUnconfirmedTransaction(stub shim.ChaincodeS
 	var txMsgsUnconfirmed []TransactionMsg
 
 	for _, txMsg := range txMsgs {
-		if txMsg.BuyerID == accountid && txMsg.Status == STATUS_WAITING {
+		if txMsg.Status == STATUS_WAITING {
 			txMsgsUnconfirmed = append(txMsgsUnconfirmed, txMsg)
 		}
 	}
 
 	txMsgsJson, err := json.Marshal(txMsgsUnconfirmed)
+	myLogger.Debugf("Response : %s", txMsgsJson)
+
+	return txMsgsJson, nil
+}
+
+func (t *SETBlockChainChaincode) findCompletedTransaction(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	myLogger.Debugf("+++++++++++++++++++++++++++++++++++ findCompletedTransaction +++++++++++++++++++++++++++++++++")
+
+	if len(args) != 0 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 0")
+	}
+
+	accountid, err := t.getCertAttribute(stub)
+	if err != nil {
+		return nil, err
+	}
+	myLogger.Debugf("accountid [%v]", accountid)
+
+	txMsgs, err := txHandler.findTransactionByAccountID(stub, accountid)
+	if err != nil {
+		return nil, err
+	}
+
+	var txMsgsCompleted []TransactionMsg
+
+	for _, txMsg := range txMsgs {
+		if txMsg.Status == STATUS_CONFIRMED || txMsg.Status == STATUS_CANCEL_BUYER || txMsg.Status == STATUS_CANCEL_SELLER {
+			txMsgsCompleted = append(txMsgsCompleted, txMsg)
+		}
+	}
+
+	txMsgsJson, err := json.Marshal(txMsgsCompleted)
 	myLogger.Debugf("Response : %s", txMsgsJson)
 
 	return txMsgsJson, nil
@@ -307,6 +382,8 @@ func (t *SETBlockChainChaincode) Invoke(stub shim.ChaincodeStubInterface) ([]byt
 		*/
 	} else if function == "confirmBuy" {
 		return t.confirmBuy(stub, args)
+	} else if function == "cancel" {
+		return t.cancel(stub, args)
 	}
 
 	return nil, errors.New("Received unknown function invocation")
@@ -326,6 +403,8 @@ func (t *SETBlockChainChaincode) Query(stub shim.ChaincodeStubInterface) ([]byte
 		return t.getBalance(stub, args)
 	} else if function == "findUnconfirmedTransaction" {
 		return t.findUnconfirmedTransaction(stub, args)
+	} else if function == "findCompletedTransaction" {
+		return t.findCompletedTransaction(stub, args)
 	} else if function == "findConfirmedTransactionBySymbol" {
 		return t.findConfirmedTransactionBySymbol(stub, args)
 	} else if function == "getMoney" {
