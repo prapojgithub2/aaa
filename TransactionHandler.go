@@ -26,9 +26,9 @@ const (
   stateCurrTransactionID = "CurrTransactionID"
 
   STATUS_WAITING   = "Waiting"
-  STATUS_CONFIRMED = "Confirmed"
-  STATUS_CANCEL_BUYER = "CancelByBuyer"
-  STATUS_CANCEL_SELLER = "CancelBySeller"
+  STATUS_CONFIRMED = "Complete"
+  STATUS_CANCEL_BUYER = "Cancelled By Buyer"
+  STATUS_CANCEL_SELLER = "Cancelled By Seller"
 )
 
 type transactionHandler struct {
