@@ -365,10 +365,8 @@ func (t *SETBlockChainChaincode) getMaxNumberHolder(stub shim.ChaincodeStubInter
 	return txMsgsJSON, nil
 }
 
-func (t *SETBlockChainChaincode) Init(stub shim.ChaincodeStubInterface) ([]byte, error) {
+func (t *SETBlockChainChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	myLogger.Debugf("******************************** Init ****************************************")
-
-	function, args := stub.GetFunctionAndParameters()
 
 	myLogger.Infof("[SETBlockChainChaincode] Init[%v]", function)
 	if len(args) != 0 {
@@ -381,10 +379,8 @@ func (t *SETBlockChainChaincode) Init(stub shim.ChaincodeStubInterface) ([]byte,
 	return nil, txHandler.createTable(stub)
 }
 
-func (t *SETBlockChainChaincode) Invoke(stub shim.ChaincodeStubInterface) ([]byte, error) {
+func (t *SETBlockChainChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	myLogger.Debugf("******************************** Invoke ****************************************")
-
-	function, args := stub.GetFunctionAndParameters()
 
 	myLogger.Infof("[SETBlockChainChaincode] Invoke[%v]", function)
 
@@ -401,16 +397,14 @@ func (t *SETBlockChainChaincode) Invoke(stub shim.ChaincodeStubInterface) ([]byt
 	} else if function == "cancel" {
 		return t.cancel(stub, args)
 	}
-  
+
 	return nil, errors.New("Received unknown function invocation")
 }
 
-type CallbackFunc func(stub shim.ChaincodeStubInterface, args []string)([]byte, error) 
+type CallbackFunc func(stub shim.ChaincodeStubInterface, args []string)([]byte, error)
 
-func (t *SETBlockChainChaincode) Query(stub shim.ChaincodeStubInterface) ([]byte, error) {
+func (t *SETBlockChainChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	myLogger.Debugf("******************************** Query ****************************************")
-
-	function, args := stub.GetFunctionAndParameters()
 
 	myLogger.Infof("[SETBlockChainChaincode] Query[%v]", function)
 
@@ -426,7 +420,7 @@ func (t *SETBlockChainChaincode) Query(stub shim.ChaincodeStubInterface) ([]byte
  	// }
 
  	// m := functionMap[function]
- 	// m(stub, args) 
+ 	// m(stub, args)
  	// m(func(stub shim.ChaincodeStubInterface,args []string))(stub, args)
 
 	if function == "getTransaction" {
