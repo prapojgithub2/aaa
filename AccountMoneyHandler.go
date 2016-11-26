@@ -36,16 +36,23 @@ func (t *accountMoneyHandler) createTable(stub shim.ChaincodeStubInterface) erro
 }
 
 func (t *accountMoneyHandler) initAccountMoney(stub shim.ChaincodeStubInterface) error {
-	t.assign(stub, "AA01", 100000)
-	t.assign(stub, "AA02", 100000)
-	t.assign(stub, "AA03", 100000)
-	t.assign(stub, "AA04", 100000)
-	t.assign(stub, "AA05", 100000)
-	t.assign(stub, "AA06", 100000)
-	t.assign(stub, "AA07", 100000)
-	t.assign(stub, "AA08", 100000)
-	t.assign(stub, "AA09", 100000)
-	t.assign(stub, "AA10", 100000)
+	t.assign(stub, "investor01", 10000)
+	t.assign(stub, "investor02", 20000)
+	t.assign(stub, "investor03", 30000)
+	t.assign(stub, "owner01", 0)
+	t.assign(stub, "owner02", 0)
+	t.assign(stub, "owner03", 0)
+	
+	// t.assign(stub, "AA01", 100000)
+	// t.assign(stub, "AA02", 100000)
+	// t.assign(stub, "AA03", 100000)
+	// t.assign(stub, "AA04", 100000)
+	// t.assign(stub, "AA05", 100000)
+	// t.assign(stub, "AA06", 100000)
+	// t.assign(stub, "AA07", 100000)
+	// t.assign(stub, "AA08", 100000)
+	// t.assign(stub, "AA09", 100000)
+	// t.assign(stub, "AA10", 100000)
 	return nil
 }
 
