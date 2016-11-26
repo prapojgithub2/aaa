@@ -410,7 +410,7 @@ func (t *SETBlockChainChaincode) Query(stub shim.ChaincodeStubInterface) ([]byte
  	}
 
  	m := functionMap[function]
- 	m(stub, args)
+ 	m(stub, args) 
  	// m(func(stub shim.ChaincodeStubInterface,args []string))(stub, args)
 
 	// if function == "getTransaction" {
