@@ -296,6 +296,22 @@ func (t *SETBlockChainChaincode) getBalance(stub shim.ChaincodeStubInterface, ar
 	return actBalHandler.query(stub, accountid)
 }
 
+func (t *SETBlockChainChaincode) getHolders(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	myLogger.Debugf("+++++++++++++++++++++++++++++++++++ getHolders +++++++++++++++++++++++++++++++++")
+
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 1")
+	}
+
+	// accountid, err := t.getCertAttribute(stub)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// myLogger.Debugf("accountid [%v]", accountid)
+
+	return actBalHandler.listHolderBySymbol(stub, args[0])
+}
+
 func (t *SETBlockChainChaincode) getMoney(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	myLogger.Debugf("+++++++++++++++++++++++++++++++++++getMoney+++++++++++++++++++++++++++++++++")
 
@@ -427,10 +443,12 @@ func (t *SETBlockChainChaincode) Query(stub shim.ChaincodeStubInterface) ([]byte
 		return t.getMoney(stub, args)
 	} else if function == "getMaxNumberHolder" {
 		return t.getMaxNumberHolder(stub, args)
+	} else if function == "getHolders" {
+		return t.getHolders(stub, args)
 	}
-
 	return nil, errors.New("Received unknown function query invocation with function " + function)
 }
+
 
 func main() {
 

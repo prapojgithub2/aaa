@@ -41,6 +41,46 @@ func (t *accountBalanceHandler) createTable(stub shim.ChaincodeStubInterface) er
 
 }
 
+func (t *accountBalanceHandler) listHolderBySymbol(stub shim.ChaincodeStubInterface,symbol string) ([]byte,error) {
+  var balMsgs []BalanceMsg 
+  var columnsTx []shim.Column
+
+  rowChannel, err := stub.GetRows(tableAccountBalance, columnsTx)
+  if err != nil {
+    myLogger.Errorf("system error %v", err)
+    return nil, errors.New("Cannot query account balance.")
+  }
+  
+  for {
+    select {
+    case row, ok := <-rowChannel:
+      if !ok {
+        rowChannel = nil
+      } else {
+            tAccount := row.Columns[0].GetString_();
+            tSymbol := row.Columns[1].GetString_();
+            tBalance := row.Columns[2].GetUint64();
+
+            if (tSymbol == symbol && tBalance > 0){ 
+              balMsg := BalanceMsg{
+                tAccount,
+                tSymbol,
+                tBalance,
+              }
+            balMsgs = append(balMsgs, balMsg)
+          }
+      }
+      if rowChannel == nil {
+        break
+      }
+    }
+  }
+
+  balMsgsJson, err := json.Marshal(balMsgs)
+  myLogger.Debugf("Response : %s",  balMsgsJson)
+  return balMsgsJson, nil
+}
+
 
 func (t *accountBalanceHandler) InitAccountBalance(stub shim.ChaincodeStubInterface) error {
 	  t.updateAccountBalance(stub,"AA01","AAAA", 1000)
