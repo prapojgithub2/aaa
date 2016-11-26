@@ -70,9 +70,9 @@ func (t *accountBalanceHandler) listHolderBySymbol(stub shim.ChaincodeStubInterf
             balMsgs = append(balMsgs, balMsg)
           }
       }
-      if rowChannel == nil {
-        break
-      }
+    }
+    if rowChannel == nil {
+      break
     }
   }
 
