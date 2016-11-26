@@ -399,35 +399,35 @@ func (t *SETBlockChainChaincode) Query(stub shim.ChaincodeStubInterface) ([]byte
 	myLogger.Infof("[SETBlockChainChaincode] Query[%v]", function)
 
 	// Handle different functions
- 	functionMap := map[string]CallbackFunc{
- 		"getTransaction" : 	t.getTransaction,
- 		"getBalance": t.getBalance,
- 		"findUnconfirmedTransaction": t.findUnconfirmedTransaction,
- 		"findCompletedTransaction": t.findCompletedTransaction,
- 		"findConfirmedTransactionBySymbol": t.findConfirmedTransactionBySymbol,
- 		"getMoney": t.getMoney,
- 		"getMaxNumberHolder": t.getMaxNumberHolder,
- 	}
+ 	// functionMap := map[string]CallbackFunc{
+ 	// 	"getTransaction" : 	t.getTransaction,
+ 	// 	"getBalance": t.getBalance,
+ 	// 	"findUnconfirmedTransaction": t.findUnconfirmedTransaction,
+ 	// 	"findCompletedTransaction": t.findCompletedTransaction,
+ 	// 	"findConfirmedTransactionBySymbol": t.findConfirmedTransactionBySymbol,
+ 	// 	"getMoney": t.getMoney,
+ 	// 	"getMaxNumberHolder": t.getMaxNumberHolder,
+ 	// }
 
- 	m := functionMap[function]
- 	m(stub, args) 
+ 	// m := functionMap[function]
+ 	// m(stub, args) 
  	// m(func(stub shim.ChaincodeStubInterface,args []string))(stub, args)
 
-	// if function == "getTransaction" {
-	// 	return t.getTransaction(stub, args)
-	// } else if function == "getBalance" {
-	// 	return t.getBalance(stub, args)
-	// } else if function == "findUnconfirmedTransaction" {
-	// 	return t.findUnconfirmedTransaction(stub, args)
-	// } else if function == "findCompletedTransaction" {
-	// 	return t.findCompletedTransaction(stub, args)
-	// } else if function == "findConfirmedTransactionBySymbol" {
-	// 	return t.findConfirmedTransactionBySymbol(stub, args)
-	// } else if function == "getMoney" {
-	// 	return t.getMoney(stub, args)
-	// } else if function == "getMaxNumberHolder" {
-	// 	return t.getMaxNumberHolder(stub, args)
-	// }
+	if function == "getTransaction" {
+		return t.getTransaction(stub, args)
+	} else if function == "getBalance" {
+		return t.getBalance(stub, args)
+	} else if function == "findUnconfirmedTransaction" {
+		return t.findUnconfirmedTransaction(stub, args)
+	} else if function == "findCompletedTransaction" {
+		return t.findCompletedTransaction(stub, args)
+	} else if function == "findConfirmedTransactionBySymbol" {
+		return t.findConfirmedTransactionBySymbol(stub, args)
+	} else if function == "getMoney" {
+		return t.getMoney(stub, args)
+	} else if function == "getMaxNumberHolder" {
+		return t.getMaxNumberHolder(stub, args)
+	}
 
 	return nil, errors.New("Received unknown function query invocation with function " + function)
 }
