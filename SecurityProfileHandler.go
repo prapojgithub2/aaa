@@ -37,11 +37,14 @@ func (t *securityProfileHandler) createTable(stub shim.ChaincodeStubInterface) e
 }
 
 func (t *securityProfileHandler) initSecurityProfile(stub shim.ChaincodeStubInterface) error {
-	t.createSecurityProfile(stub, "AAAA", 10)
-	t.createSecurityProfile(stub, "BBBB", 10)
-	t.createSecurityProfile(stub, "CCCC", 10)
-	t.createSecurityProfile(stub, "DDDD", 10)
-	t.createSecurityProfile(stub, "EEEE", 10)
+	t.createSecurityProfile(stub, "Ookbee", 3)
+	t.createSecurityProfile(stub, "Wongnai", 4)
+	t.createSecurityProfile(stub, "ClaimDi", 5)
+	// t.createSecurityProfile(stub, "AAAA", 10)
+	// t.createSecurityProfile(stub, "BBBB", 10)
+	// t.createSecurityProfile(stub, "CCCC", 10)
+	// t.createSecurityProfile(stub, "DDDD", 10)
+	// t.createSecurityProfile(stub, "EEEE", 10)
 	return nil
 }
 
