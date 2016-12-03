@@ -304,3 +304,27 @@ func (t *accountBalanceHandler) transferAccountBalance(stub shim.ChaincodeStubIn
   t.updateAccountBalance(stub,buyerID,symbol,buyerBal)
   return nil
 }
+
+func (t *accountBalanceHandler) issueStock(stub shim.ChaincodeStubInterface, accountid string, symbol string, volume uint64) error {
+  myLogger.Debugf("issue stock %v , %v , %v",accountid,symbol,volume)
+
+  var columnsTx []shim.Column
+  colAccountID := shim.Column{Value: &shim.Column_String_{String_: accountid}}
+  columnsTx = append(columnsTx, colAccountID)
+  colSymbol := shim.Column{Value: &shim.Column_String_{String_: symbol}}
+  columnsTx = append(columnsTx, colSymbol)
+
+  account, err := stub.GetRow(tableAccountBalance, columnsTx)
+  if err != nil  {
+    myLogger.Errorf("system error %v", err)
+    return errors.New("Cannot transfer account balance on buy side.")
+  }
+  var bal uint64 = 0;
+  if len(account.Columns) > 0 {
+    bal = account.Columns[2].GetUint64()
+  }
+  bal = volume + bal;
+  myLogger.Infof("+++++++++++++++++++  Total Bal %v" , bal)
+  t.updateAccountBalance(stub,accountid,symbol,bal)
+  return nil
+}

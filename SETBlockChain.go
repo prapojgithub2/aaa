@@ -182,6 +182,23 @@ func (t *SETBlockChainChaincode) cancel(stub shim.ChaincodeStubInterface, args [
 	return nil, errors.New("Invalid buyerID or SellerID")
 }
 
+func (t *SETBlockChainChaincode) issueStock(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	myLogger.Debugf("+++++++++++++++++++++++++++++++++++ issueStock +++++++++++++++++++++++++++++++++")
+
+	if len(args) != 3 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 3")
+	}
+
+	accountid := args[0]
+	symbol := args[1]
+	volume, err := strconv.ParseUint(args[2], 10, 64)
+	if err != nil {
+		return nil, errors.New("Cannot parse volume")
+	}
+
+	return nil, actBalHandler.issueStock(stub, accountid, symbol, volume)
+}
+
 func (t *SETBlockChainChaincode) findUnconfirmedTransaction(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	myLogger.Debugf("+++++++++++++++++++++++++++++++++++ findUnconfirmedTransaction +++++++++++++++++++++++++++++++++")
 
@@ -436,6 +453,11 @@ func (t *SETBlockChainChaincode) Invoke(stub shim.ChaincodeStubInterface, functi
 			return nil, errors.New("Invalid role")
 		}
 		return t.cancel(stub, args)
+	} else if function == "issueStock" {
+		if !t.stringInSlice(role, []string{ROLE_TSD}) {
+			return nil, errors.New("Invalid role")
+		}
+		return t.issueStock(stub, args)
 	}
 
 	return nil, errors.New("Received unknown function invocation")
