@@ -19,17 +19,34 @@ var actBalHandler = NewAccountBalanceHandler()
 var actMonHandler = NewAccountMoneyHandler()
 var secProHandler = NewSecurityProfileHandler()
 
+const (
+	ROLE_ISSUER = "issuer"
+	ROLE_TRADER = "trader"
+	ROLE_BOT = "bot"
+	ROLE_TSD = "tsd"
+)
+
 type SETBlockChainChaincode struct {
 }
 
-func (t *SETBlockChainChaincode) getCertAttribute(stub shim.ChaincodeStubInterface) (string, error) {
+func (t *SETBlockChainChaincode) getAccountid(stub shim.ChaincodeStubInterface) (string, error) {
 	accountid, err := stub.ReadCertAttribute("accountid")
 	if err != nil {
-		myLogger.Errorf("Cannot getCertAttribute : %v", err)
-		return "", errors.New("Cannot getCertAttribute")
+		myLogger.Errorf("Cannot getAccountid : %v", err)
+		return "", errors.New("Cannot getAccountid")
 	}
 
 	return string(accountid), nil
+}
+
+func (t *SETBlockChainChaincode) getRole(stub shim.ChaincodeStubInterface) (string, error) {
+	role, err := stub.ReadCertAttribute("role")
+	if err != nil {
+		myLogger.Errorf("Cannot getRole : %v", err)
+		return "", errors.New("Cannot getRole")
+	}
+
+	return string(role), nil
 }
 
 func (t *SETBlockChainChaincode) sell(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
@@ -39,7 +56,7 @@ func (t *SETBlockChainChaincode) sell(stub shim.ChaincodeStubInterface, args []s
 		return nil, errors.New("Incorrect number of arguments. Expecting 4")
 	}
 
-	accountid, err := t.getCertAttribute(stub)
+	accountid, err := t.getAccountid(stub)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +83,7 @@ func (t *SETBlockChainChaincode) confirmBuy(stub shim.ChaincodeStubInterface, ar
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
 
-	accountid, err := t.getCertAttribute(stub)
+	accountid, err := t.getAccountid(stub)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +137,7 @@ func (t *SETBlockChainChaincode) cancel(stub shim.ChaincodeStubInterface, args [
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
 
-	accountid, err := t.getCertAttribute(stub)
+	accountid, err := t.getAccountid(stub)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +180,7 @@ func (t *SETBlockChainChaincode) findUnconfirmedTransaction(stub shim.ChaincodeS
 		return nil, errors.New("Incorrect number of arguments. Expecting 0")
 	}
 
-	accountid, err := t.getCertAttribute(stub)
+	accountid, err := t.getAccountid(stub)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +212,7 @@ func (t *SETBlockChainChaincode) findCompletedTransaction(stub shim.ChaincodeStu
 		return nil, errors.New("Incorrect number of arguments. Expecting 0")
 	}
 
-	accountid, err := t.getCertAttribute(stub)
+	accountid, err := t.getAccountid(stub)
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +244,7 @@ func (t *SETBlockChainChaincode) findConfirmedTransactionBySymbol(stub shim.Chai
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
 
-	accountid, err := t.getCertAttribute(stub)
+	accountid, err := t.getAccountid(stub)
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +279,7 @@ func (t *SETBlockChainChaincode) getTransaction(stub shim.ChaincodeStubInterface
 		return nil, errors.New("Incorrect number of arguments. Expecting 0")
 	}
 
-	accountid, err := t.getCertAttribute(stub)
+	accountid, err := t.getAccountid(stub)
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +304,7 @@ func (t *SETBlockChainChaincode) getBalance(stub shim.ChaincodeStubInterface, ar
 		return nil, errors.New("Incorrect number of arguments. Expecting 0")
 	}
 
-	accountid, err := t.getCertAttribute(stub)
+	accountid, err := t.getAccountid(stub)
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +320,7 @@ func (t *SETBlockChainChaincode) getHolders(stub shim.ChaincodeStubInterface, ar
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
 
-	// accountid, err := t.getCertAttribute(stub)
+	// accountid, err := t.getAccountid(stub)
 	// if err != nil {
 	// 	return nil, err
 	// }
@@ -315,7 +332,7 @@ func (t *SETBlockChainChaincode) getHolders(stub shim.ChaincodeStubInterface, ar
 func (t *SETBlockChainChaincode) getMoney(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	myLogger.Debugf("+++++++++++++++++++++++++++++++++++getMoney+++++++++++++++++++++++++++++++++")
 
-	accountid, err := t.getCertAttribute(stub)
+	accountid, err := t.getAccountid(stub)
 	if err != nil {
 		return nil, err
 	}
