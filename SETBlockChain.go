@@ -29,6 +29,15 @@ const (
 type SETBlockChainChaincode struct {
 }
 
+func (t *SETBlockChainChaincode) stringInSlice(a string, list []string) bool {
+    for _, b := range list {
+        if b == a {
+            return true
+        }
+    }
+    return false
+}
+
 func (t *SETBlockChainChaincode) getAccountid(stub shim.ChaincodeStubInterface) (string, error) {
 	accountid, err := stub.ReadCertAttribute("accountid")
 	if err != nil {
@@ -401,8 +410,16 @@ func (t *SETBlockChainChaincode) Invoke(stub shim.ChaincodeStubInterface, functi
 
 	myLogger.Infof("[SETBlockChainChaincode] Invoke[%v]", function)
 
+	role, err := t.getRole(stub)
+	if err != nil {
+		return nil, err
+	}
+
 	//   Handle different functions
 	if function == "sell" {
+		if !t.stringInSlice(role, []string{ROLE_TRADER, ROLE_ISSUER}) {
+			return nil, errors.New("Invalid role")
+		}
 		return t.sell(stub, args)
 		/*} else if function == "buy" {
 		    return t.buy(stub, args)
@@ -410,8 +427,14 @@ func (t *SETBlockChainChaincode) Invoke(stub shim.ChaincodeStubInterface, functi
 		    return t.confirmSell(stub, args)
 		*/
 	} else if function == "confirmBuy" {
+		if !t.stringInSlice(role, []string{ROLE_TRADER, ROLE_ISSUER}) {
+			return nil, errors.New("Invalid role")
+		}
 		return t.confirmBuy(stub, args)
 	} else if function == "cancel" {
+		if !t.stringInSlice(role, []string{ROLE_TRADER, ROLE_ISSUER}) {
+			return nil, errors.New("Invalid role")
+		}
 		return t.cancel(stub, args)
 	}
 
@@ -440,26 +463,54 @@ func (t *SETBlockChainChaincode) Query(stub shim.ChaincodeStubInterface, functio
  	// m(stub, args)
  	// m(func(stub shim.ChaincodeStubInterface,args []string))(stub, args)
 
+	role, err := t.getRole(stub)
+	if err != nil {
+		return nil, err
+	}
+
 	if function == "getTransaction" {
+		if !t.stringInSlice(role, []string{ROLE_TRADER, ROLE_ISSUER}) {
+			return nil, errors.New("Invalid role")
+		}
 		return t.getTransaction(stub, args)
 	} else if function == "getBalance" {
+		if !t.stringInSlice(role, []string{ROLE_TRADER, ROLE_ISSUER}) {
+			return nil, errors.New("Invalid role")
+		}
 		return t.getBalance(stub, args)
 	} else if function == "findUnconfirmedTransaction" {
+		if !t.stringInSlice(role, []string{ROLE_TRADER, ROLE_ISSUER}) {
+			return nil, errors.New("Invalid role")
+		}
 		return t.findUnconfirmedTransaction(stub, args)
 	} else if function == "findCompletedTransaction" {
+		if !t.stringInSlice(role, []string{ROLE_TRADER, ROLE_ISSUER}) {
+			return nil, errors.New("Invalid role")
+		}
 		return t.findCompletedTransaction(stub, args)
 	} else if function == "findConfirmedTransactionBySymbol" {
+		if !t.stringInSlice(role, []string{ROLE_TRADER, ROLE_ISSUER}) {
+			return nil, errors.New("Invalid role")
+		}
 		return t.findConfirmedTransactionBySymbol(stub, args)
 	} else if function == "getMoney" {
+		if !t.stringInSlice(role, []string{ROLE_TRADER, ROLE_ISSUER}) {
+			return nil, errors.New("Invalid role")
+		}
 		return t.getMoney(stub, args)
 	} else if function == "getMaxNumberHolder" {
+		if !t.stringInSlice(role, []string{ROLE_TRADER, ROLE_ISSUER}) {
+			return nil, errors.New("Invalid role")
+		}
 		return t.getMaxNumberHolder(stub, args)
 	} else if function == "getHolders" {
+		if !t.stringInSlice(role, []string{ROLE_ISSUER}) {
+			return nil, errors.New("Invalid role")
+		}
 		return t.getHolders(stub, args)
 	}
 	return nil, errors.New("Received unknown function query invocation with function " + function)
 }
-
 
 func main() {
 
