@@ -22,20 +22,20 @@ var secProHandler = NewSecurityProfileHandler()
 const (
 	ROLE_ISSUER = "issuer"
 	ROLE_TRADER = "trader"
-	ROLE_BOT = "bot"
-	ROLE_TSD = "tsd"
+	ROLE_BOT    = "bot"
+	ROLE_TSD    = "tsd"
 )
 
 type SETBlockChainChaincode struct {
 }
 
 func (t *SETBlockChainChaincode) stringInSlice(a string, list []string) bool {
-    for _, b := range list {
-        if b == a {
-            return true
-        }
-    }
-    return false
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
 
 func (t *SETBlockChainChaincode) getAccountid(stub shim.ChaincodeStubInterface) (string, error) {
@@ -382,6 +382,22 @@ func (t *SETBlockChainChaincode) getMoney(stub shim.ChaincodeStubInterface, args
 	return txMsgsJSON, nil
 }
 
+func (t *SETBlockChainChaincode) addMoney(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	myLogger.Debugf("+++++++++++++++++++++++++++++++++++addMoney+++++++++++++++++++++++++++++++++")
+
+	if len(args) != 2 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 2")
+	}
+
+	accountid := args[0]
+	amount, err := strconv.ParseUint(args[1], 10, 64)
+	if err != nil {
+		return nil, errors.New("Cannot parse volume")
+	}
+
+	return nil, actMonHandler.assign(stub, accountid, amount)
+}
+
 func (t *SETBlockChainChaincode) getMaxNumberHolder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	myLogger.Debugf("+++++++++++++++++++++++++++++++++++getMaxNumberHolder+++++++++++++++++++++++++++++++++")
 	if len(args) != 1 {
@@ -458,12 +474,17 @@ func (t *SETBlockChainChaincode) Invoke(stub shim.ChaincodeStubInterface, functi
 			return nil, errors.New("Invalid role")
 		}
 		return t.issueStock(stub, args)
+	} else if function == "addMoney" {
+		if !t.stringInSlice(role, []string{ROLE_BOT}) {
+			return nil, errors.New("Invalid role")
+		}
+		return t.addMoney(stub, args)
 	}
 
 	return nil, errors.New("Received unknown function invocation")
 }
 
-type CallbackFunc func(stub shim.ChaincodeStubInterface, args []string)([]byte, error)
+type CallbackFunc func(stub shim.ChaincodeStubInterface, args []string) ([]byte, error)
 
 func (t *SETBlockChainChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	myLogger.Debugf("******************************** Query ****************************************")
@@ -471,19 +492,19 @@ func (t *SETBlockChainChaincode) Query(stub shim.ChaincodeStubInterface, functio
 	myLogger.Infof("[SETBlockChainChaincode] Query[%v]", function)
 
 	// Handle different functions
- 	// functionMap := map[string]CallbackFunc{
- 	// 	"getTransaction" : 	t.getTransaction,
- 	// 	"getBalance": t.getBalance,
- 	// 	"findUnconfirmedTransaction": t.findUnconfirmedTransaction,
- 	// 	"findCompletedTransaction": t.findCompletedTransaction,
- 	// 	"findConfirmedTransactionBySymbol": t.findConfirmedTransactionBySymbol,
- 	// 	"getMoney": t.getMoney,
- 	// 	"getMaxNumberHolder": t.getMaxNumberHolder,
- 	// }
+	// functionMap := map[string]CallbackFunc{
+	// 	"getTransaction" : 	t.getTransaction,
+	// 	"getBalance": t.getBalance,
+	// 	"findUnconfirmedTransaction": t.findUnconfirmedTransaction,
+	// 	"findCompletedTransaction": t.findCompletedTransaction,
+	// 	"findConfirmedTransactionBySymbol": t.findConfirmedTransactionBySymbol,
+	// 	"getMoney": t.getMoney,
+	// 	"getMaxNumberHolder": t.getMaxNumberHolder,
+	// }
 
- 	// m := functionMap[function]
- 	// m(stub, args)
- 	// m(func(stub shim.ChaincodeStubInterface,args []string))(stub, args)
+	// m := functionMap[function]
+	// m(stub, args)
+	// m(func(stub shim.ChaincodeStubInterface,args []string))(stub, args)
 
 	role, err := t.getRole(stub)
 	if err != nil {
