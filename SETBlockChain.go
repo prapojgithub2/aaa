@@ -395,7 +395,7 @@ func (t *SETBlockChainChaincode) addMoney(stub shim.ChaincodeStubInterface, args
 		return nil, errors.New("Cannot parse volume")
 	}
 
-	return nil, actMonHandler.assign(stub, accountid, amount)
+	return nil, actMonHandler.addMoney(stub, accountid, amount)
 }
 
 func (t *SETBlockChainChaincode) getMaxNumberHolder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {

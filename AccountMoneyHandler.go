@@ -42,7 +42,7 @@ func (t *accountMoneyHandler) initAccountMoney(stub shim.ChaincodeStubInterface)
 	t.assign(stub, "owner01", 0)
 	t.assign(stub, "owner02", 0)
 	t.assign(stub, "owner03", 0)
-	
+
 	// t.assign(stub, "AA01", 100000)
 	// t.assign(stub, "AA02", 100000)
 	// t.assign(stub, "AA03", 100000)
@@ -95,6 +95,20 @@ func (t *accountMoneyHandler) updateAccountBalance(stub shim.ChaincodeStubInterf
 		return errors.New("failed to replace row with account Id." + accountID)
 	}
 	return nil
+}
+
+func (t *accountMoneyHandler) addMoney(stub shim.ChaincodeStubInterface,
+	accountID string,
+	amount uint64) error {
+
+	myLogger.Debugf("addMoney accountID= %v", accountID)
+
+	currentAmt, err := t.queryBalance(stub, accountID)
+	if err != nil {
+		return t.assign(stub, accountID, amount)
+	}
+
+	return t.updateAccountBalance(stub, accountID, amount+currentAmt)
 }
 
 func (t *accountMoneyHandler) deleteAccountRecord(stub shim.ChaincodeStubInterface, accountID string) error {
